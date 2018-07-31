@@ -200,33 +200,8 @@ class ESN():
         #self.allstate=np.vstack((self.bias,self.state))
         self.coefs=np.dot(solve_2(self.allstate.T,namda,ifintercept),targets.T)
     
-            
-    
+ 
   
-
-
-    def train(self,inputs,targets,ifrestart):
-        targets=np.array(targets) 
-        inputs=np.array(inputs)       
-        if inputs.ndim < 2:
-            inputs = np.reshape(inputs, (-1,len(inputs)))
-        if targets.ndim < 2:
-            targets = np.reshape(targets, (-1,len(targets)))
-        self.update(inputs,ifrestart) 
-        self.state=discard(self.state)
-        targets=discard(targets)
-        #print('targets',np.shape(targets))
-        #print('states',np.shape(self.state))
-        self.bias=np.ones((1,np.shape(targets)[-1]))
-        #self.allstate=np.vstack((self.state,self.bias))
-        self.allstate=np.vstack((self.bias,self.state))
-        #print('allstates',np.shape(self.allstate))
-        self.coefs=np.dot(solve_2(self.allstate,lamda,0).T,targets.T)  #TODO:
-        #print('coefs',self.coefs)  
-        if self.ifplot:
-            plotState(self.state,5)
-
-        self.lastoutput=targets[:,-1]
      
     def choose(self,timeshift,u_train,u_target,u_valid,u_true,x):
         print('**---------------timeshift==%d----------------**'
@@ -285,29 +260,24 @@ class ESN():
     
 
     def err(self,signal,real,ifnormal):
-        
+        """
+        calculate the error.
+        ifnormal===1 :  use Normalized Mean Square Error
+        ifnormal===0:   use Mean Square Error
+        """
+        # get the length
         self.siglenth=int(np.size(signal)/self.n_inputs)
-        print('lenth===',self.siglenth)
+        # reshape the two signals in case one is column vector, 
+        # and the other is row vector
         real=np.reshape(np.array(real),(self.siglenth,1))
-        # print('real',np.shape(real))
-        # print('signal',np.shape(signal))
         signal=np.reshape(np.array(signal),(self.siglenth,1))     
         if ifnormal:
-            err=(np.sum((np.multiply((signal-real),(signal-real))
-        /(np.multiply(real,real)))))/self.siglenth
+            err=np.sum((np.multiply((signal-real),(signal-real))
+        /(np.multiply(real-np.mean(real),real-np.mean(real)))))/self.siglenth
         else:
             err=(np.sum(np.multiply((signal-real),(signal-real))
         ))/self.siglenth
-        # print('out',np.shape(signal)) 
-        # distance=signal-real
-        # print('差值',signal-real)
-        # print('差值的形状',np.shape(signal-real))
-        # print('差值的平方',np.multiply(distance,distance))
-        # print('差值平方标准化',np.multiply(distance,distance)/(np.multiply(real,real)))
-        # print('最大值',np.max(np.multiply(distance,distance)/(np.multiply(real,real))))
-        # print('分母最小',signal[np.argmin(np.abs(real*real))],np.min(np.abs(real*real)))
-        # print('求和',np.sum((np.multiply((signal-real),(signal-real))
-        # /(np.multiply(real,real)))))
+
         return err
 
     def test(self,inputs,targets,ratio):

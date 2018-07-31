@@ -103,10 +103,6 @@ for timeshift in timerange:
 plt.figure()
 plt.plot(timerange,err)
 plt.plot(timerange,err_lesn)
-print('parameter==================',para)
-print('error=====================',err)
-plt.title('error with respect to  timeshifts')
-plt.show()
 
 
 
@@ -129,3 +125,7 @@ error=====================
 
 
 """
+print('parameter==================',para)
+print('error=====================',err)
+plt.title('error with respect to  timeshifts')
+plt.show()
