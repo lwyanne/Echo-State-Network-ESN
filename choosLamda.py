@@ -10,30 +10,31 @@ Investigation of Regularization Parameter
 
 
 
-def choose(timeshift,x):
+def choose(object,timeshift,x):
+    
     print('**---------------timeshift==%d----------------**'
     %timeshift)
     error=[]
     para=0
-    esn.update(u_train,1)
-    temp1=esn.allstate
+    object.update(u_train,1)
+    temp1=object.allstate
     temp1=discard(temp1)
 
-    esn.update(u_valid,0) 
-    temp2=esn.allstate
+    object.update(u_valid,0) 
+    temp2=object.allstate
     print(temp2)
     print(np.shape(temp2))
     temp2=discard(temp2)
     # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
     # esn.initweights()
-    for numda in x:
-        y=10**numda
-        esn.allstate=temp1
-        esn.fit(u_train,u_target,y,0)
-        esn.allstate=temp2
-        esn.predict(1)
-        err=esn.err(esn.outputs,u_true,1)
-        print('numda==',numda,'err==',err)
+    for lamda in x:
+        y=10**lamda
+        object.allstate=temp1
+        object.fit(u_train,u_target,y,0)
+        object.allstate=temp2
+        object.predict(1)
+        err=object.err(object.outputs,u_true,1)
+        print('lamda==',lamda,'err==',err)
         error.append(err)
     
     minE=np.min(error)
@@ -43,10 +44,10 @@ def choose(timeshift,x):
         'choose parameter==',para,
         'minError===',minE)
 
-    plt.figure()
-    plt.title('timeshift==%d'%timeshift)
-    plt.plot(x,error)
-    esn.mydel()
+
+
+    plt.plot(x,error,label='timeshift=%d'%timeshift)
+    #esn.mydel()
     return minE,para
 
 
@@ -66,34 +67,37 @@ esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
 esn.initweights()
 err=[]
 para=[]
-timerange=np.arange(-10,10)
-x=np.linspace(-8, math.log10(20), num=100)   
+timerange=np.arange(-10,11)
+x=np.linspace(-8, 8, num=200)   
+plt.subplot(211)
+plt.title('ESN')
+plt.xlabel('lamda')
+plt.ylabel('NMSE')
+
 for timeshift in timerange:
     u_train=u1[0][12:-12-timeshift]
     u_target=u1[0][12+timeshift:-12]
     u_valid=u2[0][12:-12-timeshift]
     u_true=u2[0][12+timeshift:-12]
     u_true=discard(u_true)
-    error,lamda=(choose(timeshift,x))
+    error,lamda=(choose(esn,timeshift,x))
     err.append(error)
     para.append(lamda)
 
 lesn=LESN(n_inputs=1,n_outputs=1,sparsity=0.1)
 lesn.initweights()
 err_lesn=[]
+plt.subplot(212)
+plt.title('Linear Reservoir')
+plt.xlabel('lamda')
+plt.ylabel('NMSE')
 for timeshift in timerange:
     u_train=u1[0][12:-12-timeshift]
     u_target=u1[0][12+timeshift:-12]
     u_valid=u2[0][12:-12-timeshift]
     u_true=u2[0][12+timeshift:-12]
     u_true=discard(u_true)
-    lesn.update(u_train,1)
-    lesn.allstate=discard(lesn.allstate)
-    lesn.fit(u_train,u_target,0,0)
-    lesn.update(u_valid,0)
-    lesn.allstate=discard(lesn.allstate)
-    lesn.predict(1)
-    temp=lesn.err(lesn.outputs,u_true,1)
+    temp,lamda=(choose(lesn,timeshift,x))
     err_lesn.append(temp)
 
 
@@ -101,8 +105,11 @@ for timeshift in timerange:
 
 
 plt.figure()
-plt.plot(timerange,err)
-plt.plot(timerange,err_lesn)
+plt.plot(timerange,err,label='error of ESN')
+plt.plot(timerange,err_lesn,label='error of Linear Reservoir')
+plt.title('NMSE of ESN and Linear Reservoir regarding lambda')
+plt.xlabel('lambda')
+plt.ylabel('NMSE')
 
 
 
@@ -127,5 +134,5 @@ error=====================
 """
 print('parameter==================',para)
 print('error=====================',err)
-plt.title('error with respect to  timeshifts')
+
 plt.show()
