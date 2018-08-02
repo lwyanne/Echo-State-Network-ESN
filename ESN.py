@@ -272,8 +272,15 @@ class ESN():
         real=np.reshape(np.array(real),(self.siglenth,1))
         signal=np.reshape(np.array(signal),(self.siglenth,1))     
         if ifnormal:
-            err=np.sum((np.multiply((signal-real),(signal-real))
-        /(np.multiply(real-np.mean(real),real-np.mean(real)))))/self.siglenth
+            err=(np.mean(
+                    np.multiply(
+                            (signal-real),(signal-real)
+                            ))/
+                    np.mean(np.multiply(
+                            real-np.mean(real),real-np.mean(real)
+                            )
+            ))
+        
         else:
             err=(np.sum(np.multiply((signal-real),(signal-real))
         ))/self.siglenth

@@ -10,8 +10,11 @@ Investigation of Regularization Parameter
 
 
 
-def choose(object,timeshift,x):
-    
+
+def choose(object,timeshift,x,fignum):
+    #plt.figure()
+    #plt.title('timeshift=%d'%(timeshift))
+    #plt.plot(u_true,label='true')
     print('**---------------timeshift==%d----------------**'
     %timeshift)
     error=[]
@@ -22,18 +25,17 @@ def choose(object,timeshift,x):
 
     object.update(u_valid,0) 
     temp2=object.allstate
-    print(temp2)
-    print(np.shape(temp2))
     temp2=discard(temp2)
     # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
     # esn.initweights()
     for lamda in x:
         y=10**lamda
         object.allstate=temp1
-        object.fit(u_train,u_target,y,0)
+        object.fit(u_train,u_target,y,1)
         object.allstate=temp2
         object.predict(1)
         err=object.err(object.outputs,u_true,1)
+        #plt.plot(object.outputs,label='outputs with lambda=%f'%lamda)
         print('lamda==',lamda,'err==',err)
         error.append(err)
     
@@ -45,8 +47,8 @@ def choose(object,timeshift,x):
         'minError===',minE)
 
 
-
-    plt.plot(x,error,label='timeshift=%d'%timeshift)
+    plt.figure(fignum)
+    plt.plot(x,np.log10(error),label='timeshift=%d'%timeshift)
     #esn.mydel()
     return minE,para
 
@@ -63,12 +65,15 @@ u2.normalize()
 u2=u2.get()
 
 
-esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
+esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.5)
 esn.initweights()
 err=[]
 para=[]
 timerange=np.arange(-10,11)
-x=np.linspace(-8, 8, num=200)   
+
+x=np.linspace(-8, 2, num=100)   
+#x=[-2,0,5,10]
+plt.figure(1)
 plt.subplot(211)
 plt.title('ESN')
 plt.xlabel('lamda')
@@ -80,9 +85,12 @@ for timeshift in timerange:
     u_valid=u2[0][12:-12-timeshift]
     u_true=u2[0][12+timeshift:-12]
     u_true=discard(u_true)
-    error,lamda=(choose(esn,timeshift,x))
+    error,lamda=(choose(esn,timeshift,x,1))
     err.append(error)
     para.append(lamda)
+
+
+
 
 lesn=LESN(n_inputs=1,n_outputs=1,sparsity=0.1)
 lesn.initweights()
@@ -97,14 +105,14 @@ for timeshift in timerange:
     u_valid=u2[0][12:-12-timeshift]
     u_true=u2[0][12+timeshift:-12]
     u_true=discard(u_true)
-    temp,lamda=(choose(lesn,timeshift,x))
+    temp,lamda=(choose(lesn,timeshift,x,1))
     err_lesn.append(temp)
 
 
 
 
 
-plt.figure()
+plt.figure(100)
 plt.plot(timerange,err,label='error of ESN')
 plt.plot(timerange,err_lesn,label='error of Linear Reservoir')
 plt.title('NMSE of ESN and Linear Reservoir regarding lambda')
