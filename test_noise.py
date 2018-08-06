@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Aug  3 15:20:40 2018
+
+@author: acerr
+"""
+
 import numpy as np  
 from ESN import *
 import matplotlib.pyplot as plt
@@ -30,21 +37,21 @@ def choose(object,timeshift,x,fignum):
     # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
     # esn.initweights()
     for lamda in x:
-        #plt.figure() 
-        #plt.suptitle('timeshift=%d lamda=%f  %s '%(timeshift,lamda,object))
-        #plt.subplot(121)
+        plt.figure() 
+        plt.suptitle('timeshift=%d lamda=%f  %s '%(timeshift,lamda,object))
+        plt.subplot(121)
         y=10**lamda
         object.allstate=temp1
         object.fit(u_train,u_target,y,1)
         object.predict(0)
-        #plt.plot(object.outputs,label='training outputs with lambda=%f'%lamda)
-        #plt.plot(u_target,label='training target')
-        #plt.xlabel('time')
-        #plt.ylabel('value')
+        plt.plot(object.outputs,label='training outputs with lambda=%f'%lamda)
+        plt.plot(u_target,label='training target')
+        plt.xlabel('time')
+        plt.ylabel('value')
 
-        #plt.legend()
+        plt.legend()
         err=object.err(object.outputs,u_target,1)
-        #plt.title('NMSE(log)==%f'%math.log10(err))
+        plt.title('NMSE(log)==%f'%math.log10(err))
         error_train.append(err)
         del err
         del object.outputs
@@ -53,13 +60,13 @@ def choose(object,timeshift,x,fignum):
         object.predict(1)
         err=object.err(object.outputs,u_true,1)
 
-        #plt.subplot(122)
-        #plt.plot(u_true,label='true values')
-        #plt.plot(object.outputs,label='validation outputs')
-        #plt.xlabel('time')
-        #plt.ylabel('value')
-        #plt.title('NMSE(log)==%f'%math.log10(err))
-        #plt.legend()
+        plt.subplot(122)
+        plt.plot(u_true,label='true values')
+        plt.plot(object.outputs,label='validation outputs')
+        plt.xlabel('time')
+        plt.ylabel('value')
+        plt.title('NMSE(log)==%f'%math.log10(err))
+        plt.legend()
         print('lamda==',lamda,'err==',err)
         error.append(err)
         
@@ -78,26 +85,20 @@ def choose(object,timeshift,x,fignum):
     return minE,para
 
 
-u1=Lorenz((1,1,1),len=100000)  # already discarded the transient
-u1.downsample()
-u1.normalize()
-u1=u1.get()
+u1=np.random.normal(size=(10000))  # already discarded the transient
 
 
-u2 = Lorenz((5,-3,3),len=100000)
-u2.downsample(10)
-u2.normalize()
-u2=u2.get()
 
+u2 = np.random.normal(size=(10000))
 
-esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.01)
+esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.5)
 esn.initweights()
 err=[]
 para=[]
-timerange=np.arange(-10,11) 
-#timerange=[0]
-x=np.linspace(-8, 2, num=100)   
-#x=[-4,-2,0]
+#timerange=np.arange(-10,11) 
+timerange=[-10,0]
+#x=np.linspace(-8, 2, num=100)   
+x=[-4,-2,0]
 plt.figure(1)
 plt.subplot(211)
 plt.title('ESN')
@@ -105,13 +106,12 @@ plt.xlabel('lamda')
 plt.ylabel('NMSE')
 plt.legend()
 
-
 for timeshift in timerange:
-    u_train=u1[0][12:-12-timeshift]
-    u_target=u1[2][12+timeshift:-12]
+    u_train=u1[12:-12-timeshift]
+    u_target=u1[12+timeshift:-12]
     u_target=discard(u_target)
-    u_valid=u2[0][12:-12-timeshift]
-    u_true=u2[2][12+timeshift:-12]
+    u_valid=u2[12:-12-timeshift]
+    u_true=u2[12+timeshift:-12]
     u_true=discard(u_true)
     error,lamda=(choose(esn,timeshift,x,1))
     err.append(error)
@@ -120,7 +120,7 @@ for timeshift in timerange:
 
 
 
-lesn=LESN(n_inputs=1,n_outputs=1,sparsity=0.01)
+lesn=LESN(n_inputs=1,n_outputs=1,sparsity=0.1)
 lesn.initweights()
 err_lesn=[]
 plt.subplot(212)
@@ -129,11 +129,11 @@ plt.xlabel('lamda')
 plt.ylabel('NMSE')
 plt.legend()
 for timeshift in timerange:
-    u_train=u1[0][12:-12-timeshift]
-    u_target=u1[2][12+timeshift:-12]
+    u_train=u1[12:-12-timeshift]
+    u_target=u1[12+timeshift:-12]
     u_target=discard(u_target)
-    u_valid=u2[0][12:-12-timeshift]
-    u_true=u2[2][12+timeshift:-12]
+    u_valid=u2[12:-12-timeshift]
+    u_true=u2[12+timeshift:-12]
     u_true=discard(u_true)
     temp,lamda=(choose(lesn,timeshift,x,1))
     err_lesn.append(temp)

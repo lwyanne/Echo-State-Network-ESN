@@ -195,7 +195,7 @@ class ESN():
             targets = np.reshape(targets, (-1,len(targets)))
         # self.update(inputs,ifrestart) 
         #self.state=discard(self.state)
-        targets=discard(targets)
+        #targets=discard(targets)
         #self.bias=np.ones((1,np.shape(targets)[-1]))
         #self.allstate=np.vstack((self.bias,self.state))
         self.coefs=np.dot(solve_2(self.allstate.T,namda,ifintercept),targets.T)
