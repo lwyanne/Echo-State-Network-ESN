@@ -67,7 +67,8 @@ def solve_2(A,lamda,ifintercept):
     else:
         regu=lamda*np.eye(np.shape(A.T)[0])
         #print(regu)
-        if not ifintercept:regu[0][0]=0   #TODO:
+        if not ifintercept:regu[0][0]=0   
+        #TODO:
         return np.dot(np.linalg.inv(np.dot(A.T,A)+regu), A.T)
 
 
@@ -104,8 +105,14 @@ def threeDplot(signal,label):
     plt.show()
     return
 
-def plotState(states,shownum,):
-    x=states[0:shownum*10:10,:]
+def plotState(states,shownum,showmode=1):
+    """
+    showmode=1 : show by row. (plot different rows )
+    showmode=0 : show by column (plot different columns)
+    
+    """
+    rd=np.random.randint(0, np.shape(states)[showmode], size=(shownum,1))
+    x=[states[i,:] for i in rd]
     timelen=np.shape(x)[-1]
     fig=plt.figure()
     b=np.linspace(0,shownum,shownum)

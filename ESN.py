@@ -195,7 +195,7 @@ class ESN():
         
         
 
-    def fit(self,inputs,targets,namda,ifintercept=0):
+    def fit(self, inputs,targets,namda,ifintercept=0):
         """
         fit the output weights, using Ridge Regression methods.
         return: the coefficience matrix
