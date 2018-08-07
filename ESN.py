@@ -75,8 +75,16 @@ class Lorenz():
 
 class ESN():
 
-    def __init__(self,n_inputs,n_outputs,n_reservoir=200,
-                spectral_radius=0.95, sparsity=0.1, ifplot=0,noise=0.001,seednum=42,b=0.35,a=1):
+    def __init__(self,n_inputs,n_outputs,
+                 n_reservoir=200,
+                spectral_radius=0.95,
+                sparsity=0.1, 
+                ifplot=0,
+                noise=0.001,
+                seednum=42,
+                b=0.35,
+                a=1,
+                alpha=0):
         """
         Args:
             n_inputs: the number of input dimensions
@@ -96,7 +104,7 @@ class ESN():
         self.b=b
         self.a=a
         self.ifplot=ifplot
-
+        self.alpha=alpha
     
     def initweights(self):
         """
@@ -133,7 +141,6 @@ class ESN():
                     
         del dic
         self.V=V
-
         #initialize bias weights:
         np.random.seed(self.seednum+4)        
         self.Wb=self.b*np.random.normal(size=(self.n_reservoir,1))
@@ -161,9 +168,11 @@ class ESN():
 
             self.lenth+=1       
 
-        for i in range(1,self.lenth):
+        for i in range(1, self.lenth):
             self.state[:,i]=(
-                np.tanh(
+                self.alpha * self.state[:,i]
+                +
+                (1 - self.alpha) * np.tanh(
                     np.dot(self.W.T, self.state[:,i-1])
                         + self.a * np.dot(self.V, inputs[:,i].T) 
                         + self.Wb.T
@@ -174,12 +183,17 @@ class ESN():
 
         self.laststate=self.state[:,-1]
         self.laststate=np.reshape(self.laststate, (len(self.laststate),-1))
-        
         self.lastinput=inputs[:,-1]
         self.lastinput=np.reshape(self.lastinput, (len(self.lastinput),-1))
         self.bias=np.ones((1,self.lenth))
         self.allstate=np.vstack((self.bias,self.state))
 
+    def show_internal(self, shownum=5):
+        rd=np. random. randint(0, self. n_reservoir - 1, size=(shownum, 1))
+        
+        
+        
+        
 
     def fit(self,inputs,targets,namda,ifintercept=0):
         """
