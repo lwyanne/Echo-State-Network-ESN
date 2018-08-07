@@ -111,8 +111,11 @@ def plotState(states,shownum,showmode=1):
     showmode=0 : show by column (plot different columns)
     
     """
-    rd=np.random.randint(0, np.shape(states)[showmode], size=(shownum,1))
-    x=[states[i,:] for i in rd]
+    rd=np.random.randint(0, np.shape(states)[1-showmode], size=shownum)
+    rd=list(rd)
+    print(rd)
+    x=states[rd,:]
+    print(np.shape(x))
     timelen=np.shape(x)[-1]
     fig=plt.figure()
     b=np.linspace(0,shownum,shownum)

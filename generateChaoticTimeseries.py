@@ -18,16 +18,19 @@ import math
 inputs=np.zeros(10000)
 
 autoEsn=ESN(
-            n_inputs=0,
+            n_inputs=1,
             n_outputs=50,
             n_reservoir=50,
             spectral_radius=5,
-            ifplot=1
-            alpha=0.8
+            ifplot=1,
+            alpha=0.2,
+            sparsity=0.5
             )
 
 autoEsn.initweights()
 
 autoEsn.update(inputs,1)
 
+autoEsn.show_internal()
 
+timeseries=disgard(autoEsn.state)

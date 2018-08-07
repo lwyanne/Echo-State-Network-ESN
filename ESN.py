@@ -188,9 +188,12 @@ class ESN():
         self.bias=np.ones((1,self.lenth))
         self.allstate=np.vstack((self.bias,self.state))
 
-    def show_internal(self, shownum=5):
-        rd=np. random. randint(0, self. n_reservoir - 1, size=(shownum, 1))
-        
+    def show_internal(self, shownum=5,ifshow=1):
+        """
+        ???
+        """
+        plotState(self.allstate,shownum)
+        if ifshow: plt.show()
         
         
         
@@ -256,9 +259,7 @@ class ESN():
         self.mydel()
         return minE,para
 
-    def crossValid(self,numda):
-        
-        pass #TODO:
+
 
 
     def predict(self,mode):
