@@ -221,10 +221,34 @@ class ESN():
         #self.allstate=np.vstack((self.bias,self.state))
         self.coefs=np.dot(solve_2(self.allstate.T,namda,ifintercept),targets.T)
     
- 
+    
       
-         
-    def choose(self,timeshift,u_train,u_target,u_valid,u_true,x,fignum):
+    def search(self,a,b,theta_error):
+        
+        r=(sqrt(5)-1)/2  
+        a1=b-r*(b-a)  
+        print(a1)
+        a2=a+r*(b-a)  
+        stepNum=0  
+        while abs(b-a)>theta_error:  
+            stepNum=stepNum+1  
+            f1=tune(a1)  
+            f2=tune(a2)  
+            if f1>f2:  
+                a=a1  
+                f1=f2  
+                a1=a2  
+                a2=a+r*(b-a)  
+            else:  
+                b=a2  
+                a2=a1  
+                f2=f1  
+                a1=b-r*(b-a)  
+            x_opt=(a+b)/2  
+            f_opt=tune(x_opt)  
+        return (x_opt,f_opt,stepNum)
+        
+    def choose(self,timeshift,u_train,u_target,u_valid,u_true,fignum,a=-8,b=3):
         #plt.figure()
         #plt.title('timeshift=%d'%(timeshift))
         #plt.plot(u_true,label='true')
@@ -234,82 +258,85 @@ class ESN():
         error_train=[]
         para=0
         self.update(u_train,1)
+        global temp1, temp2
         temp1=self.allstate
         temp1=discard(temp1)
     
         self.update(u_valid,0) 
         temp2=self.allstate
         temp2=discard(temp2)
-        # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
-        # esn.initweights()
-        for lamda in x:
-            #plt.figure() 
-            #plt.suptitle('timeshift=%d lamda=%f  %s '%(timeshift,lamda,self))
-            #plt.subplot(121)
+
+        def tune(lamda):
             y=10**lamda
             self.allstate=temp1
             self.fit(u_train,u_target,y,1)
             self.predict(0)
-            print(np.shape(self.outputs))
-            #plt.plot(self.outputs,label='training outputs with lambda=%f'%lamda)
-            #plt.plot(u_target,label='training target')
-            #plt.xlabel('time')
-            #plt.ylabel('value')
-    
-            #plt.legend()
-            err=self.err(self.outputs,u_target,1)
-            #plt.title('NMSE(log)==%f'%math.log10(err))
-            error_train.append(err)
-            del err
-            del self.outputs
+            err1=self.err(self.outputs,u_target,1)
             
             self.allstate=temp2
             self.predict(1)
-            err=self.err(self.outputs,u_true,1)
-    
-            #plt.subplot(122)
-            #plt.plot(u_true,label='true values')
-            #plt.plot(self.outputs,label='validation outputs')
-            #plt.xlabel('time')
-            #plt.ylabel('value')
-            #plt.title('NMSE(log)==%f'%math.log10(err))
-            #plt.legend()
-            print('lamda==',lamda,'err==',err)
-            error.append(err)
-            
-        minE=np.min(error)
-    
-        para=x[np.argmin(error)]
-        print('timeshift==',timeshift,
-            'choose parameter==',para,
-            'minError===',minE)
-    
-    
-        plt.figure(fignum)
-        plt.plot(x,(error_train),label='train_error,timeshift=%d'%timeshift)
-        plt.plot(x,(error),label='valid_error,timeshift=%d'%timeshift)
-        #esn.mydel()
+            err2=self.err(self.outputs,u_true,1)
+            print('lamda===',lamda,'error===',err2)
+            return err2 
         
-        plt.figure(fignum+1)
-        plt.subplot(211)
-        y=10**x[np.argmin(error)]
-        self.allstate=temp1
-        self.fit(u_train,u_target,y,1)
-        self.predict(0)
-        plt.plot(self.outputs,label='output')
-        plt.plot(u_target,label='true')
 
-        self.allstate=temp2
+        theta_error=0.2
+        x_opt,f_opt,stepnum=goldenOpt(a,b,tune,theta_error)
+#        for lamda in x:
+#            err1,err2= self.tune(lamda)
+#            error_train.append(err)
+#            del err
+#            del self.outputs
+#            
+#            self.allstate=temp2
+#            self.predict(1)
+#            err=self.err(self.outputs,u_true,1)
+#    
+#            #plt.subplot(122)
+#            #plt.plot(u_true,label='true values')
+#            #plt.plot(self.outputs,label='validation outputs')
+#            #plt.xlabel('time')
+#            #plt.ylabel('value')
+#            #plt.title('NMSE(log)==%f'%math.log10(err))
+#            #plt.legend()
+#            print('lamda==',lamda,'err==',err)
+#            error.append(err)
+#            
+#        minE=np.min(error)
+#    
+#        para=x[np.argmin(error)]
+#        print('timeshift==',timeshift,
+#            'choose parameter==',para,
+#            'minError===',minE)
+#    
+#    
+#        plt.figure(fignum)
+#        plt.plot(x,(error_train),label='train_error,timeshift=%d'%timeshift)
+#        plt.plot(x,(error),label='valid_error,timeshift=%d'%timeshift)
+#        #esn.mydel()
+#        
+#        plt.figure(fignum+1)
+#        plt.subplot(211)
+#        y=10**x[np.argmin(error)]
+#        self.allstate=temp1
+#        self.fit(u_train,u_target,y,1)
+#        self.predict(0)
+#        plt.plot(self.outputs,label='output')
+#        plt.plot(u_target,label='true')
+#
+#        self.allstate=temp2
+#        
+#        self.predict(1)
+#
+#        plt.subplot(212)
+#        plt.plot(self.outputs,label='output')
+#        plt.plot(u_true,label='true')
+        print('lambda==',10**x_opt,'minimum error==', f_opt,
+              'stepnum==',stepnum)
+        return f_opt,x_opt
         
-        self.predict(1)
-
-        plt.subplot(212)
-        plt.plot(self.outputs,label='output')
-        plt.plot(u_true,label='true')
-
-
-        
-        return minE,para
+         #return minE,para
+         
     
 
 

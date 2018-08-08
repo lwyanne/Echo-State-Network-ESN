@@ -237,4 +237,39 @@ def choose(object,timeshift,x,fignum):
     
 
 
-
+def goldenOpt(a,b,f,Theta_error):
+    """
+    0.618方法
+    """
+    r=(sqrt(5)-1)/2  
+    a1=b-r*(b-a)  
+    print(a1)
+    a2=a+r*(b-a)  
+    stepNum=0  
+    while abs(b-a)>Theta_error:  
+        stepNum=stepNum+1  
+        f1=f(a1)  
+        f2=f(a2)  
+        if f1>f2:  
+            a=a1  
+            f1=f2  
+            a1=a2  
+            a2=a+r*(b-a)  
+        else:  
+            b=a2  
+            a2=a1  
+            f2=f1  
+            a1=b-r*(b-a)  
+        x_opt=(a+b)/2  
+        f_opt=f(x_opt)  
+    return (x_opt,f_opt,stepNum)
+#a=0  
+#b=1  
+#Theta_error=0.001
+#x_opt,f_opt,stepNum=goldenOpt(a,b,Theta_error)  
+#x=np.linspace(0,1,100)  
+#y=[pow(sin(x1),6)*tan(1-x1)*pow(e,30*x1) for x1 in x]  
+#plt.plot(x,y)  
+#plt.plot(x_opt,-f_opt,'r*')  
+#plt.title('%f is the optimal point of 0.618 and execute %d steps'%(x_opt,stepNum))
+#plt.show()  
