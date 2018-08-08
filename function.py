@@ -168,6 +168,71 @@ def choose(timeshift,esn,x):
     return minE,para
 
 
+def choose(object,timeshift,x,fignum):
+    #plt.figure()
+    #plt.title('timeshift=%d'%(timeshift))
+    #plt.plot(u_true,label='true')
+    print('**---------------timeshift==%d----------------**'
+    %timeshift)
+    error=[]
+    error_train=[]
+    para=0
+    object.update(u_train,1)
+    temp1=object.allstate
+    temp1=discard(temp1)
+
+    object.update(u_valid,0) 
+    temp2=object.allstate
+    temp2=discard(temp2)
+    # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
+    # esn.initweights()
+    for lamda in x:
+        #plt.figure() 
+        #plt.suptitle('timeshift=%d lamda=%f  %s '%(timeshift,lamda,object))
+        #plt.subplot(121)
+        y=10**lamda
+        object.allstate=temp1
+        object.fit(u_train,u_target,y,1)
+        object.predict(0)
+        #plt.plot(object.outputs,label='training outputs with lambda=%f'%lamda)
+        #plt.plot(u_target,label='training target')
+        #plt.xlabel('time')
+        #plt.ylabel('value')
+
+        #plt.legend()
+        err=object.err(object.outputs,u_target,1)
+        #plt.title('NMSE(log)==%f'%math.log10(err))
+        error_train.append(err)
+        del err
+        del object.outputs
+        
+        object.allstate=temp2
+        object.predict(1)
+        err=object.err(object.outputs,u_true,1)
+
+        #plt.subplot(122)
+        #plt.plot(u_true,label='true values')
+        #plt.plot(object.outputs,label='validation outputs')
+        #plt.xlabel('time')
+        #plt.ylabel('value')
+        #plt.title('NMSE(log)==%f'%math.log10(err))
+        #plt.legend()
+        print('lamda==',lamda,'err==',err)
+        error.append(err)
+        
+    minE=np.min(error)
+
+    para=x[np.argmin(error)]
+    print('timeshift==',timeshift,
+        'choose parameter==',para,
+        'minError===',minE)
+
+
+    plt.figure(fignum)
+    plt.plot(x,(error_train),label='train_error,timeshift=%d'%timeshift)
+    plt.plot(x,(error),label='valid_error,timeshift=%d'%timeshift)
+    #esn.mydel()
+    return minE,para
 
     
 

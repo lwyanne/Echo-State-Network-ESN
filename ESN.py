@@ -79,6 +79,7 @@ class ESN():
                  n_reservoir=200,
                 spectral_radius=0.95,
                 sparsity=0.1, 
+                sparsity_in=0.1,
                 ifplot=0,
                 noise=0.001,
                 seednum=42,
@@ -98,6 +99,7 @@ class ESN():
         self.n_outputs=n_outputs
         self.spectral_radius=spectral_radius
         self.sparsity=sparsity
+        self.sparsity_in=sparsity_in
         self.noise=noise
         self.flag=self.n_inputs-1
         self.seednum=seednum
@@ -126,8 +128,10 @@ class ESN():
 
         radius=np.max(np.abs(scipy.linalg.eigvals(W)))
         self.W=W*self.spectral_radius/radius
+        del n_zero
 
-
+        np.random.seed(self.seednum+10)
+        n_zero=round(self.n_reservoir*self.sparsity_in) 
         #initialize input weights:
         np.random.seed(self.seednum+1)
         V=np.random.normal(size=(self.n_reservoir,self.n_inputs))
@@ -218,47 +222,95 @@ class ESN():
         self.coefs=np.dot(solve_2(self.allstate.T,namda,ifintercept),targets.T)
     
  
-  
-     
-    def choose(self,timeshift,u_train,u_target,u_valid,u_true,x):
+      
+         
+    def choose(self,timeshift,u_train,u_target,u_valid,u_true,x,fignum):
+        #plt.figure()
+        #plt.title('timeshift=%d'%(timeshift))
+        #plt.plot(u_true,label='true')
         print('**---------------timeshift==%d----------------**'
         %timeshift)
         error=[]
+        error_train=[]
         para=0
         self.update(u_train,1)
         temp1=self.allstate
         temp1=discard(temp1)
-
+    
         self.update(u_valid,0) 
         temp2=self.allstate
-        print(temp2)
-        print(np.shape(temp2))
         temp2=discard(temp2)
         # esn=ESN(n_inputs=1,n_outputs=1,sparsity=0.1)
         # esn.initweights()
-        for numda in x:
-            y=10**numda
+        for lamda in x:
+            #plt.figure() 
+            #plt.suptitle('timeshift=%d lamda=%f  %s '%(timeshift,lamda,self))
+            #plt.subplot(121)
+            y=10**lamda
             self.allstate=temp1
-            self.fit(u_train,u_target,y,0)
+            self.fit(u_train,u_target,y,1)
+            self.predict(0)
+            print(np.shape(self.outputs))
+            #plt.plot(self.outputs,label='training outputs with lambda=%f'%lamda)
+            #plt.plot(u_target,label='training target')
+            #plt.xlabel('time')
+            #plt.ylabel('value')
+    
+            #plt.legend()
+            err=self.err(self.outputs,u_target,1)
+            #plt.title('NMSE(log)==%f'%math.log10(err))
+            error_train.append(err)
+            del err
+            del self.outputs
+            
             self.allstate=temp2
             self.predict(1)
             err=self.err(self.outputs,u_true,1)
-            print('numda==',numda,'err==',err)
+    
+            #plt.subplot(122)
+            #plt.plot(u_true,label='true values')
+            #plt.plot(self.outputs,label='validation outputs')
+            #plt.xlabel('time')
+            #plt.ylabel('value')
+            #plt.title('NMSE(log)==%f'%math.log10(err))
+            #plt.legend()
+            print('lamda==',lamda,'err==',err)
             error.append(err)
-        
+            
         minE=np.min(error)
-
+    
         para=x[np.argmin(error)]
         print('timeshift==',timeshift,
             'choose parameter==',para,
             'minError===',minE)
+    
+    
+        plt.figure(fignum)
+        plt.plot(x,(error_train),label='train_error,timeshift=%d'%timeshift)
+        plt.plot(x,(error),label='valid_error,timeshift=%d'%timeshift)
+        #esn.mydel()
+        
+        plt.figure(fignum+1)
+        plt.subplot(211)
+        y=10**x[np.argmin(error)]
+        self.allstate=temp1
+        self.fit(u_train,u_target,y,1)
+        self.predict(0)
+        plt.plot(self.outputs,label='output')
+        plt.plot(u_target,label='true')
 
-        plt.figure()
-        plt.title('timeshift==%d'%timeshift)
-        plt.plot(x,error)
-        self.mydel()
+        self.allstate=temp2
+        
+        self.predict(1)
+
+        plt.subplot(212)
+        plt.plot(self.outputs,label='output')
+        plt.plot(u_true,label='true')
+
+
+        
         return minE,para
-
+    
 
 
 
@@ -281,7 +333,7 @@ class ESN():
         ifnormal===0:   use Mean Square Error
         """
         # get the length
-        self.siglenth=int(np.size(signal)/self.n_inputs)
+        self.siglenth=int(np.size(signal)/self.n_outputs)
         # reshape the two signals in case one is column vector, 
         # and the other is row vector
         real=np.reshape(np.array(real),(self.siglenth,1))
@@ -326,6 +378,10 @@ class ESN():
         if mode: del self.coefs
         
     
+
+
+class ESN_complex(ESN):
+    pass
 
 
 class LESN(ESN):
