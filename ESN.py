@@ -147,7 +147,7 @@ class ESN():
         np.random.seed(self.seednum+5)
         self.noiseVec=self.noise * np.random.normal(size=(self.n_reservoir,1)).T    
         
-    def update(self,inputs,ifrestart):
+    def update(self,inputs,ifrestart=1):
         """
         update the state of internal nodes.
         """
@@ -264,7 +264,7 @@ class ESN():
 
     def predict(self,mode):
         """
-        mode=1 or 0
+        mode=1 or 0    #TODO: mode should correspond to the mode of update
         """
         #print('inputs',np.shape(inputs))
         #self.update(inputs,0)
@@ -318,12 +318,12 @@ class ESN():
         return self.erro
 
 
-    def mydel(self):
+    def mydel(self,mode):
         del self.allstate
         del self.state
         del self.bias
-        del self.coefs
-        del self.outputs
+
+        if mode: del self.coefs
         
     
 
